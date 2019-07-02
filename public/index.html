@@ -1,0 +1,63 @@
+<html>
+
+<head>
+    <title>Express</title>
+    <script src="/javascripts/index.js"></script>
+    <link rel="stylesheet" href="/stylesheets/style.css">
+    <script src="/geoData/gescherweg.js"></script>
+    <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.4.1.min.js"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="http://d3js.org/topojson.v1.min.js"></script>
+</head>
+
+<body>
+<table>
+    <tr>
+        <td>
+            <label>Longitude: <input type="text" id="longitudeInput" value="7.576440"> </label>
+        </td>
+        <td>
+            <label>Latitude: <input type="text" id="latitudeInput" value="51.979320"> </label>
+        </td>
+        <td>
+            <div style="padding: 5px; background: #ff786e; border-radius: 6px"><input type="checkbox" id="firstPoint">
+            </div>
+        </td>
+        <td rowspan="2">
+            <div>
+                <button id="findRoute"> Find Route</button>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <label>Longitude: <input type="text" id="longitudeInput2" value="7.561200"> </label>
+        </td>
+        <td>
+            <label>Latitude: <input type="text" id="latitudeInput2" value="51.973320"> </label>
+        </td>
+        <td>
+            <div style="padding: 5px; background: #3f88ff;border-radius: 6px"><input type="checkbox" id="secondPoint">
+            </div>
+        </td>
+
+    </tr>
+    <tr>
+        <td>
+            <label>Street: <input type="text" id="search_name"> </label>
+        </td>
+        <td>
+            <button id="submitForm"> show Map</button>
+        </td>
+    </tr>
+</table>
+<div id="map">
+
+</div>
+</body>
+<script>
+    $(window).on('load', function () {
+        window.index.init();
+    });
+</script>
+</html>
