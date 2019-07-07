@@ -9,13 +9,13 @@ class Index {
         let lat2 = parseFloat($('#latitudeInput2').val());
         let long = parseFloat($('#longitudeInput').val());
         let long2 = parseFloat($('#longitudeInput2').val());
+        let start_point = [long, lat];
+        let end_point = [long2, lat2];
+
         $('#submitForm').click(() => {
             $.ajax({
-                url: window.location + 'test',
+                url: window.location + 'get_map',
                 dataType: 'json',
-                data: {
-                    lat, long, lat2, long2
-                },
                 success: function (data) {
                     this.data = data;
                     this.showMap(data);
@@ -27,7 +27,23 @@ class Index {
             });
         });
 
-        $('#findRoute').click(this.findRoute.bind(this));
+        $('#findRoute').click(() => {
+            $.ajax({
+                url: window.location + 'find_route',
+                dataType: 'json',
+                data: {
+                   start_point,end_point
+                },
+                success: function (data) {
+                    this.data = data;
+                    this.showMap(data);
+                }.bind(this),
+                error: function (res) {
+                    alert('error');
+                    console.log(res);
+                }
+            });
+        });
     };
 
     showMap(data) {
@@ -97,6 +113,16 @@ class Index {
         let lat2 = parseFloat($('#latitudeInput2').val());
         let long = parseFloat($('#longitudeInput').val());
         let long2 = parseFloat($('#longitudeInput2').val());
+
+
+    }
+/*
+
+    findRoute() {
+        let lat = parseFloat($('#latitudeInput').val());
+        let lat2 = parseFloat($('#latitudeInput2').val());
+        let long = parseFloat($('#longitudeInput').val());
+        let long2 = parseFloat($('#longitudeInput2').val());
         let start_point = [long, lat];
         let end_point = [long2, lat2];
         let routes_coordinates = [];
@@ -124,7 +150,7 @@ class Index {
                     }
                 }
             }
-            //this.showPoint(best_point);
+            this.showPoint(best_point,'blue',0.4);
             routes_coordinates = routes_coordinates.filter(point => point[0] !== best_point[0] && point[1] !== best_point[1]);
             best_route.push(best_point);
             if (distToEnd < 50) {
@@ -139,9 +165,10 @@ class Index {
                 'id': 'best_route'
             }, properties: {id: 'best_route'}, type: 'Feature'
         };
-        this.showStreet(rout_obj, 'green', 0.3, false);
+        this.showStreet(rout_obj, 'green', 2, false);
 
     }
+*/
 
     calculate_distance(point1, point2) {
         let toRad = function (Value) {
