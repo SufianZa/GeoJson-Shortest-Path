@@ -4,9 +4,9 @@ let router = express.Router();
 let Graph = require('@dagrejs/graphlib').Graph;
 let alg = require('@dagrejs/graphlib').alg;
 const fs = require('fs');
-
+let tree = require('d3').quadtree();
 let result = [];
-let mapping={};
+let mapping = {};
 let trail = [];
 let dist = 0;
 let calculate_distance = function (point1, point2) {
@@ -26,8 +26,8 @@ let calculate_distance = function (point1, point2) {
     return R * c;
 };
 
-function init(a,b) {
-    result=[];
+function init(a, b) {
+    result = [];
     let file_path = path.resolve('public\\geoData\\Gievenbeck.geojson');
 
     //read json file
@@ -45,47 +45,56 @@ function init(a,b) {
     let inc = 0;
     for (let i = 0; i < data.features.length; i++) {
         let points = data.features[i].geometry.coordinates;
+        tree.addAll(points);
         let lastNode = null;
         for (let j = 0; j < points.length; j++) {
             let node = points[j];
-            if (mapping['x'+node + ''] === undefined) {
-                mapping['x'+node + ''] = 'x'+inc;
+            if (mapping[node + ''] === undefined) {
+                mapping[node + ''] = inc;
                 inc++;
             }
 
-            undirected.setNode(mapping['x'+node + ''], {'coordinates': node});
+            undirected.setNode(mapping[node + ''], {'coordinates': node});
             if (lastNode && lastNode != node) {
-                undirected.setEdge(mapping['x'+node + ''], mapping['x'+lastNode + ''], calculate_distance(lastNode, node));
-                undirected.setEdge(mapping['x'+lastNode + ''], mapping['x'+node + ''],calculate_distance(lastNode, node));
+                undirected.setEdge(mapping[node + ''], mapping[lastNode + ''], calculate_distance(lastNode, node));
+                undirected.setEdge(mapping[lastNode + ''], mapping[node + ''], calculate_distance(lastNode, node));
             }
             lastNode = node;
         }
     }
+    let a_point = a.split(',');
+    let a_nearest = tree.find(parseFloat(a_point[1]), parseFloat(a_point[0]));
+    a_nearest = a_nearest[0] + ',' + a_nearest[1];
 
-    let x = alg.dijkstra(undirected, mapping['x'+a+''], e => {
+    let b_point = b.split(',');
+    let b_nearest = tree.find(parseFloat(b_point[1]), parseFloat(b_point[0]));
+    b_nearest = b_nearest[0] + ',' + b_nearest[1];
+    console.log(b_nearest);
+    console.log(a_nearest);
+    let x = alg.dijkstra(undirected, mapping[a_nearest + ''], e => {
         return undirected.edge(e);
     });
+
     trail = [];
     dist = 0;
-    let t = traversalTrail(x, mapping['x'+b+'']);
+    let t = traversalTrail(x, mapping[b_nearest + '']);
     let obj = Object.keys(mapping);
     for (let i = 0; i < t.length; i++) {
-        let index = parseInt(t[i].replace('x',''));
-        if(obj[index]){
-            let [long,lat] = obj[index].split(',');
-            result.push([parseFloat(long.replace('x','')),parseFloat(lat)]);
+        let index = parseInt(t[i]);
+        if (obj[index]) {
+            let [long, lat] = obj[index].split(',');
+            result.push([parseFloat(long), parseFloat(lat)]);
         }
     }
 }
 
-
-function traversalTrail(graph,point){
+function traversalTrail(graph, point) {
     trail.push(point);
-    dist += graph[point+''].distance;
-    if(graph[point+''].distance===0||graph[point+''].predecessor===undefined){
+    dist += graph[point + ''].distance;
+    if (graph[point + ''].distance === 0 || graph[point + ''].predecessor === undefined) {
         return trail;
     }
-    return traversalTrail(graph,graph[point+''].predecessor);
+    return traversalTrail(graph, graph[point + ''].predecessor);
 }
 
 router.get('/get_map', function (req, res, next) {
@@ -104,51 +113,52 @@ router.get('/find_route', function (req, res, next) {
 
     let a = req.query.a;
     let b = req.query.b;
-    init(a,b);
+    console.log(a);
+    console.log(b);
+    init(a, b);
     res.send({result, dist});
 });
 
 // test graph
-function blah(){
-    let gra1 = ['a','b','c','d'];
-    let gra2 = ['c','b','e','d'];
-    let gra3 = ['a','m','n','e'];
+function blah() {
+    let gra1 = ['a', 'b', 'c', 'd'];
+    let gra2 = ['c', 'b', 'e', 'd'];
+    let gra3 = ['a', 'm', 'n', 'e'];
     let g = new Graph({directed: true});
-    g.setDefaultEdgeLabel(1)
-    let lastNode=null;
-    gra1.forEach((node,i)=>{
+    g.setDefaultEdgeLabel(1);
+    let lastNode = null;
+    gra1.forEach((node, i) => {
         g.setNode(node);
-        if(lastNode){
-            g.setEdge(lastNode,node);
-            g.setEdge(node,lastNode);
+        if (lastNode) {
+            g.setEdge(lastNode, node);
+            g.setEdge(node, lastNode);
         }
 
         lastNode = node;
-    })
-    lastNode=null;
-    gra2.forEach((node,i)=>{
+    });
+    lastNode = null;
+    gra2.forEach((node, i) => {
         g.setNode(node);
-        if(lastNode){
-            g.setEdge(node,lastNode);
-            g.setEdge(lastNode,node);
+        if (lastNode) {
+            g.setEdge(node, lastNode);
+            g.setEdge(lastNode, node);
         }
         lastNode = node;
-    })
-    lastNode=null;
-    gra3.forEach((node,i)=>{
+    });
+    lastNode = null;
+    gra3.forEach((node, i) => {
         g.setNode(node);
-        if(lastNode){
-            g.setEdge(node,lastNode);
-            g.setEdge(lastNode,node);
+        if (lastNode) {
+            g.setEdge(node, lastNode);
+            g.setEdge(lastNode, node);
         }
         lastNode = node;
-    })
-    let x = alg.dijkstraAll(g,  e => {
+    });
+    let x = alg.dijkstraAll(g, e => {
         return g.edge(e);
     });
     console.log(g);
     console.log(x);
 }
-
 
 module.exports = router;

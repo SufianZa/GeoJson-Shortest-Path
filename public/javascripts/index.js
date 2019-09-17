@@ -97,15 +97,15 @@ class Index {
             .attr('fill', 'none')
             .attr('stroke', color)
             .attr('stroke-width', width);
-        if (street.features) {
-            for (let j = 0; j < street.features.length; j++) {
-                let feature = street.features[j];
-                for (let i = 0; i < feature.geometry.coordinates.length; i++) {
-                    let p = feature.geometry.coordinates[i];
-                    this.showPoint(p, 'black', 2, true);
-                }
-            }
-        }
+        // if (street.features) {
+        //     for (let j = 0; j < street.features.length; j++) {
+        //         let feature = street.features[j];
+        //         for (let i = 0; i < feature.geometry.coordinates.length; i++) {
+        //             let p = feature.geometry.coordinates[i];
+        //             this.showPoint(p, 'black', 2, true);
+        //         }
+        //     }
+        // }
 
         if (clickable) {
             path.on('click', function (e) {
