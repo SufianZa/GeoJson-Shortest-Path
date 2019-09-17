@@ -2,19 +2,16 @@ class Index {
 
     init() {
         this.initBtns();
+        this.div = d3.select('body').append('div')
+            .attr('class', 'tooltip')
+            .style('opacity', 0)
+            .style('position', 'absolute');
     }
 
     initBtns() {
-        let lat = parseFloat($('#latitudeInput').val());
-        let lat2 = parseFloat($('#latitudeInput2').val());
-        let long = parseFloat($('#longitudeInput').val());
-        let long2 = parseFloat($('#longitudeInput2').val());
-        let start_point = [long, lat];
-        let end_point = [long2, lat2];
-
         $('#submitForm').click(() => {
             $.ajax({
-                url: window.location + 'get_map',
+                url: window.location + 'maps/get_map',
                 dataType: 'json',
                 success: function (data) {
                     this.data = data;
@@ -28,21 +25,35 @@ class Index {
         });
 
         $('#findRoute').click(() => {
+            let lat = parseFloat($('#latitudeInput').val());
+            let lat2 = parseFloat($('#latitudeInput2').val());
+            let long = parseFloat($('#longitudeInput').val());
+            let long2 = parseFloat($('#longitudeInput2').val());
+            let b = lat + ',' + long;
+            let a = lat2 + ',' + long2;
             $.ajax({
-                url: window.location + 'find_route',
+                url: window.location + 'maps/find_route',
                 dataType: 'json',
                 data: {
-                   start_point,end_point
+                    a, b
                 },
-                success: function (data) {
-                    this.data = data;
-                    this.showMap(data);
+                success:  function (data) {
+                    this.showMap(this.data);
+                    this.showPoint(data.result[0]);
+                    this.showPoint(data.result[data.result.length - 1]);
+                     this.animate_path(data.result);
                 }.bind(this),
                 error: function (res) {
                     alert('error');
                     console.log(res);
                 }
             });
+        });
+        $('#clearRoute').click(function () {
+            $('#latitudeInput').val('');
+            $('#latitudeInput2').val('');
+            $('#longitudeInput').val('');
+            $('#longitudeInput2').val('');
         });
     };
 
@@ -86,6 +97,15 @@ class Index {
             .attr('fill', 'none')
             .attr('stroke', color)
             .attr('stroke-width', width);
+        if (street.features) {
+            for (let j = 0; j < street.features.length; j++) {
+                let feature = street.features[j];
+                for (let i = 0; i < feature.geometry.coordinates.length; i++) {
+                    let p = feature.geometry.coordinates[i];
+                    this.showPoint(p, 'black', 2, true);
+                }
+            }
+        }
 
         if (clickable) {
             path.on('click', function (e) {
@@ -100,91 +120,51 @@ class Index {
 
     }
 
-    showPoint(point, color = 'green', width = 4) {
+    showPoint(point, color = 'green', width = 4, clickable) {
+        this.clicked = false;
         this.svg.append('circle')
             .attr('cx', this.projection(point)[0])
             .attr('cy', this.projection(point)[1])
             .attr('r', width + 'px')
-            .attr('fill', color);
-    }
-
-    findRoute() {
-        let lat = parseFloat($('#latitudeInput').val());
-        let lat2 = parseFloat($('#latitudeInput2').val());
-        let long = parseFloat($('#longitudeInput').val());
-        let long2 = parseFloat($('#longitudeInput2').val());
-
-
-    }
-/*
-
-    findRoute() {
-        let lat = parseFloat($('#latitudeInput').val());
-        let lat2 = parseFloat($('#latitudeInput2').val());
-        let long = parseFloat($('#longitudeInput').val());
-        let long2 = parseFloat($('#longitudeInput2').val());
-        let start_point = [long, lat];
-        let end_point = [long2, lat2];
-        let routes_coordinates = [];
-        for (let i = 0; i < this.data.features.length; i++) {
-            routes_coordinates = routes_coordinates.concat(this.data.features[i].geometry.coordinates);
-        }
-
-        let best_route = [];
-        best_route.push(start_point);
-        while (true) {
-            let distToStart = -1;
-            let distToEnd = -1;
-
-            let best_point;
-            // find next coordinates
-            for (let i = 0; i < routes_coordinates.length; i++) {
-                let curToStart = this.calculate_distance(routes_coordinates[i], best_route.slice(-1)[0]);
-                let curToEnd = this.calculate_distance(routes_coordinates[i], end_point);
-
-                if ((curToStart < distToStart || distToStart === -1)) {
-                    distToStart = curToStart;
-                    if ((curToEnd <= distToEnd || distToEnd === -1)) {
-                        distToEnd = curToEnd;
-                        best_point = routes_coordinates[i];
-                    }
+            .attr('fill', color)
+            .on('mouseover', (d, i) => {
+                d3.select(d3.event.target).attr('r', 6).attr('fill', 'orange');
+            })
+            .on('click', (d, i) => {
+                if ($('#latitudeInput').val() === '') {
+                    $('#latitudeInput').val(point[0]);
+                    $('#longitudeInput').val(point[1]);
+                    this.clicked = false;
                 }
-            }
-            this.showPoint(best_point,'blue',0.4);
-            routes_coordinates = routes_coordinates.filter(point => point[0] !== best_point[0] && point[1] !== best_point[1]);
-            best_route.push(best_point);
-            if (distToEnd < 50) {
-                break;
-            }
-        }
-
-        let rout_obj = {
-            'geometry': {
-                'type': 'LineString',
-                'coordinates': best_route,
-                'id': 'best_route'
-            }, properties: {id: 'best_route'}, type: 'Feature'
-        };
-        this.showStreet(rout_obj, 'green', 2, false);
-
+                if (this.clicked && $('#latitudeInput2').val() === '') {
+                    $('#latitudeInput2').val(point[0]);
+                    $('#longitudeInput2').val(point[1]);
+                    this.clicked = false;
+                }
+                this.clicked = true;
+            })
+            .on('mouseout', (d, i) => {
+                d3.select(d3.event.target).attr('r', width + 'px').attr('fill', color);
+            });
     }
-*/
 
-    calculate_distance(point1, point2) {
-        let toRad = function (Value) {
-            return Value * Math.PI / 180;
-        };
-        let R = 6371e3; // metres
-        let alpha1 = toRad(point1[1]);
-        let alpha2 = toRad(point2[1]);
-        let delta_alpha = toRad(point2[1] - point1[1]);
-        let delta_lambda = toRad(point2[0] - point1[0]);
+    animate_path(street) {
+        let line = d3.line()
+            .x(function (d, i) {return this.projection(d)[0];}.bind(this))
+            .y(function (d) {return this.projection(d)[1];}.bind(this));
 
-        let a = Math.sin(delta_alpha / 2) * Math.sin(delta_alpha / 2) +
-            Math.cos(alpha1) * Math.cos(alpha2) *
-            Math.sin(delta_lambda / 2) * Math.sin(delta_lambda / 2);
-        let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c;
+        let path = this.svg.append('path')
+            .attr('d', line(street))
+            .attr('stroke', '#3f88ff')
+            .attr('stroke-width', '3')
+            .attr('fill', 'none');
+        let totalLength = path.node().getTotalLength();
+        path.attr("stroke-dasharray", totalLength + " " + totalLength)
+            .attr("stroke-dashoffset", totalLength)
+            .transition()
+            .duration(1200).ease(d3.easeLinear)
+            .attr("stroke-dashoffset", 0);
+
     }
 }
 
