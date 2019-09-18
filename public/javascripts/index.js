@@ -90,25 +90,48 @@ class Index {
         if ($('#firstPoint').is(':checked')) this.showPoint([parseFloat($('#longitudeInput').val()), parseFloat($('#latitudeInput').val())], 'red', 5);
         if ($('#secondPoint').is(':checked')) this.showPoint([parseFloat($('#longitudeInput2').val()), parseFloat($('#latitudeInput2').val())], 'blue', 5);
         this.clicked = false;
+        let c1 = this.svg.append('circle').attr('opacity',0);
+        let c2 = this.svg.append('circle').attr('opacity',0);
         this.svg.on('click',(d)=>{
             var pos = d3.mouse(this.svg.node()),
                 px = pos[0],
                 py = pos[1];
-            this.svg.append('circle')
-                .attr('cx',  px)
-                .attr('cy', py)
-                .attr('r', 2)
-                .attr('fill',  'black');
             let inv_point = this.projection.invert([px,py]);
-
-            if ($('#latitudeInput').val() === '') {
+            if ($('#latitudeInput').val() !== '' && $('#latitudeInput2').val() !== '') {
                 $('#latitudeInput').val(inv_point[1]);
                 $('#longitudeInput').val(inv_point[0]);
+                $('#latitudeInput2').val('');
+                $('#longitudeInput2').val('');
+                c2.attr('cx',  px)
+                    .attr('cy', py)
+                    .attr('r', 2)
+                    .attr('fill',  'black')
+                    .attr('opacity',0);
+                c1.attr('cx',  px)
+                    .attr('cy', py)
+                    .attr('r', 2)
+                    .attr('fill',  'black')
+                    .attr('opacity',.9);
+                this.clicked = false;
+            }
+            else if ($('#latitudeInput').val() === '') {
+                $('#latitudeInput').val(inv_point[1]);
+                $('#longitudeInput').val(inv_point[0]);
+                c1.attr('cx',  px)
+                    .attr('cy', py)
+                    .attr('r', 2)
+                    .attr('fill',  'black')
+                    .attr('opacity',.9);
                 this.clicked = false;
             }
             if (this.clicked && $('#latitudeInput2').val() === '') {
                 $('#latitudeInput2').val(inv_point[1]);
                 $('#longitudeInput2').val(inv_point[0]);
+                c2.attr('cx',  px)
+                    .attr('cy', py)
+                    .attr('r', 2)
+                    .attr('fill',  'black')
+                    .attr('opacity',.9);
                 this.clicked = false;
             }
             this.clicked = true;

@@ -28,7 +28,7 @@ let calculate_distance = function (point1, point2) {
 
 function init(a, b) {
     result = [];
-    let file_path = path.resolve('public\\geoData\\Gievenbeck.geojson');
+    let file_path = path.resolve('public\\geoData\\muenster.geojson');
 
     //read json file
     let data = fs.readFileSync(file_path);
@@ -69,8 +69,7 @@ function init(a, b) {
     let b_point = b.split(',');
     let b_nearest = tree.find(parseFloat(b_point[1]), parseFloat(b_point[0]));
     b_nearest = b_nearest[0] + ',' + b_nearest[1];
-    console.log(b_nearest);
-    console.log(a_nearest);
+
     let x = alg.dijkstra(undirected, mapping[a_nearest + ''], e => {
         return undirected.edge(e);
     });
@@ -98,7 +97,7 @@ function traversalTrail(graph, point) {
 }
 
 router.get('/get_map', function (req, res, next) {
-    let path_file = path.resolve('public\\geoData\\Gievenbeck.geojson');
+    let path_file = path.resolve('public\\geoData\\muenster.geojson');
     res.sendFile(path_file, function (err) {
         if (err) {
             next(err);
