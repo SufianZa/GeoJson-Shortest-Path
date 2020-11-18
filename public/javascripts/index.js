@@ -136,7 +136,9 @@ class Index {
             }
             this.clicked = true;
         });
-
+        this.svg.call(d3.zoom() .on('zoom', function () {
+            d3.select('#map').select('svg').attr('transform', d3.event.transform);
+        }));
     };
 
     showStreet(street, color, width, clickable, name) {
@@ -161,7 +163,6 @@ class Index {
                 let item = $(e.currentTarget);
                 item.attr('stroke-width', 6);
                 this.data.features = this.data.features.filter(street => street.properties.name === name);
-                console.log(this.data.features);
                 this.showMap(this.data);
                 d3.event.stopPropagation();
             }.bind(this));

@@ -9,6 +9,9 @@ let result = [];
 let mapping = {};
 let trail = [];
 let dist = 0;
+
+let undirected =null;
+
 let calculate_distance = function (point1, point2) {
     let toRad = function (Value) {
         return Value * Math.PI / 180;
@@ -26,8 +29,7 @@ let calculate_distance = function (point1, point2) {
     return R * c;
 };
 
-function init(a, b) {
-    result = [];
+function initData() {
     let file_path = path.resolve('public\\geoData\\muenster.geojson');
 
     //read json file
@@ -40,7 +42,7 @@ function init(a, b) {
     data.features = data.features.filter(street => street.geometry.type === 'LineString');
 
     // create undirected Graph
-    let undirected = new Graph({directed: true});
+    undirected = new Graph({directed: true});
 
     let inc = 0;
     for (let i = 0; i < data.features.length; i++) {
@@ -62,21 +64,28 @@ function init(a, b) {
             lastNode = node;
         }
     }
+}
+
+initData();
+
+function init(a, b) {
+    result = [];
+
     let a_point = a.split(',');
-    let a_nearest = tree.find(parseFloat(a_point[1]), parseFloat(a_point[0]));
+    let a_nearest = tree.find(parseFloat(a_point[1]), parseFloat(a_point[0])); // log V
     a_nearest = a_nearest[0] + ',' + a_nearest[1];
 
     let b_point = b.split(',');
-    let b_nearest = tree.find(parseFloat(b_point[1]), parseFloat(b_point[0]));
+    let b_nearest = tree.find(parseFloat(b_point[1]), parseFloat(b_point[0])); // log V
     b_nearest = b_nearest[0] + ',' + b_nearest[1];
 
-    let x = alg.dijkstra(undirected, mapping[a_nearest + ''], e => {
+    let x = alg.dijkstra(undirected, mapping[a_nearest + ''], e => { // O((|E| + |V|) * log |V|)
         return undirected.edge(e);
     });
 
     trail = [];
     dist = 0;
-    let t = traversalTrail(x, mapping[b_nearest + '']);
+    let t = traversalTrail(x, mapping[b_nearest + '']); // O((|E| + |V|) * log |V|)
     let obj = Object.keys(mapping);
     for (let i = 0; i < t.length; i++) {
         let index = parseInt(t[i]);

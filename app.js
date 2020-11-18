@@ -1,11 +1,9 @@
 let express = require('express');
-let path = require('path');
 let cookieParser = require('cookie-parser');
 let logger = require('morgan');
-
-let indexRouter = require('./routes/index');
-let usersRouter = require('./routes/users');
+var router = express.Router();
 let mapRouter = require('./routes/map');
+let vectorRouter = require('./routes/vector');
 
 let app = express();
 
@@ -13,10 +11,13 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
+
+app.use('/', mapRouter);
 app.use('/maps', mapRouter);
+app.use('/vector', vectorRouter);
+app.use('/stylesheets/style.css', router.get('/' ));
+app.use(express.static('public'));
+
 
 
 
